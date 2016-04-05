@@ -23,7 +23,7 @@ namespace HttpMemoryLeakCheck
         private const string User = "couchbase_user";
         private const string Password = "mobile";
         // ReSharper disable once InconsistentNaming
-        private const long BlobSizeMB = 19;
+        private const long BlobSizeMB = 50;
 
         private int _count;
         private Database _db;
