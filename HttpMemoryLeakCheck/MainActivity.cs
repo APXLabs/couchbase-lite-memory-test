@@ -59,7 +59,7 @@ namespace HttpMemoryLeakCheck
                 }
 
                 _numberGenerated = FindViewById<TextView>(Resource.Id.textViewDocGen);
-                _numberGenerated.Text = $"Blobs Generated: {_count}";
+                _numberGenerated.Text = $"Documents generated: {_count}";
             }
             catch (Exception exception)
             {
