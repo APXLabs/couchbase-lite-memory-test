@@ -20,8 +20,10 @@ namespace HttpMemoryLeakCheck
         private const string Host = "10.2.1.125";
         private const int Port = 4984;
         private const string DbName = "couchbaseevents";
+        private const string User = "couchbase_user";
+        private const string Password = "mobile";
 
-        private int _count = 0;
+        private int _count;
         private Database _db;
         private Replication _pull;
         private Replication _push;
@@ -134,11 +136,11 @@ namespace HttpMemoryLeakCheck
         {
             _pull = _db.CreatePullReplication(CreateSyncUri());
             _push = _db.CreatePushReplication(CreateSyncUri());
-            var authenticator = AuthenticatorFactory.CreateBasicAuthenticator("couchbase_user", "mobile");
+            var authenticator = AuthenticatorFactory.CreateBasicAuthenticator(User, Password);
             _pull.Authenticator = authenticator;
             _push.Authenticator = authenticator;
             _pull.Continuous = true;
-            //      _push.Continuous = true;
+            _push.Continuous = false;
             _pull.Start();
            // _push.Start();
             _push.Changed += OnPushChanged;
