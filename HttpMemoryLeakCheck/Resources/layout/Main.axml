@@ -9,16 +9,23 @@
         android:layout_height="wrap_content"
         android:text="@string/Hello" />
     <TextView
-        android:text="Current Status: Initial"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView1"
-        android:layout_marginBottom="284.5dp" />
-    <TextView
         android:text="Documents generated: 0"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView2" />
+        android:id="@+id/textViewDocGen" />
+    <ScrollView
+        android:minWidth="25px"
+        android:minHeight="25px"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:id="@+id/scrollView1">
+        <TextView
+            android:text="Status: Initial"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/textViewStatus" />
+    </ScrollView>
 </LinearLayout>

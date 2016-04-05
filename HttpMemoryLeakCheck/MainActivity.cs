@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Widget;
 using Android.OS;
@@ -24,38 +25,51 @@ namespace HttpMemoryLeakCheck
         private Replication _pull;
         private Replication _push;
         private Button _button;
-        private TextView _info;
+        private TextView _status;
         private TextView _numberGenerated;
         private bool _shouldBeStopped = true;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+            try
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    StartDb();
+                    StartReplications();
+                });
 
-            StartDb();
-            StartReplications();
+                // Set our view from the "main" layout resource
+                SetContentView(Resource.Layout.Main);
 
-            // Set our view from the "main" layout resource
-            SetContentView(Resource.Layout.Main);
+                // Get our button from the layout resource,
+                // and attach an event to it
+                _button = FindViewById<Button>(Resource.Id.MyButton);
 
-            // Get our button from the layout resource,
-            // and attach an event to it
-            _button = FindViewById<Button>(Resource.Id.MyButton);
+                _button.Click += OnClicked;
 
-            _button.Click += OnClicked;
+                _status = FindViewById<TextView>(Resource.Id.textViewStatus);
+                _status.Text = "All set up";
 
-            _info = FindViewById<TextView>(Resource.Id.textView1);
-            _info.Text = "All set up";
-
-            _numberGenerated = FindViewById<TextView>(Resource.Id.textView2);
-            _numberGenerated.Text = $"Blobs Generated:{_count}";
+                _numberGenerated = FindViewById<TextView>(Resource.Id.textViewDocGen);
+                _numberGenerated.Text = $"Blobs Generated:{_count}";
+            }
+            catch (Exception exception)
+            {
+                Log.Debug(Tag, $"Exception caught: {exception.Message}");
+            }
         }
 
         private void OnClicked(object sender, EventArgs eventArgs)
         {
-            _button.Text = $"{_count++} clicks!";
+            
             _shouldBeStopped = !_shouldBeStopped;
-            if(!_shouldBeStopped)
+            var state = _shouldBeStopped ? "Start" : "Stop";
+
+            _button.Text = $"Tap to {state}";
+
+            if (!_shouldBeStopped)
                 _push.Start();
         }
 
@@ -120,7 +134,7 @@ namespace HttpMemoryLeakCheck
             _pull.Authenticator = authenticator;
             _push.Authenticator = authenticator;
             _pull.Continuous = true;
-      //      _push.Continuous = true;
+            //      _push.Continuous = true;
             _pull.Start();
             _push.Start();
             _push.Changed += OnPushChanged;
@@ -141,8 +155,9 @@ namespace HttpMemoryLeakCheck
                     break;
             }
 
-            _info.Text = replicationChangeEventArgs.ReplicationStateTransition.Destination + "\n";
-            _numberGenerated.Text = $"Blobs Generated:{_count}";
+           var stateMsg = $"State: {replicationChangeEventArgs.ReplicationStateTransition.Destination} \nTime: {DateTime.Now}\n{_status.Text}";
+            RunOnUiThread(() => _status.Text = stateMsg);
+            RunOnUiThread(() => _numberGenerated.Text = $"Documents generated: {_count}");
         }
 
         /// <summary>
