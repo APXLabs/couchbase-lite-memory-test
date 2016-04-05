@@ -19,13 +19,25 @@
         android:minHeight="25px"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fillViewport="true"
         android:id="@+id/scrollView1">
-        <TextView
-            android:text="Status: Initial"
-            android:textAppearance="?android:attr/textAppearanceMedium"
+        <TableLayout
+            android:minWidth="25px"
+            android:minHeight="25px"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/textViewStatus" />
+            android:id="@+id/tableLayout1">
+            <TableRow>
+                <TextView
+                    android:text="Status"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_width="118.0dp"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:text="Time"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+        </TableLayout>
     </ScrollView>
 </LinearLayout>

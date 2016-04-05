@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Widget;
@@ -20,14 +21,15 @@ namespace HttpMemoryLeakCheck
         private const int Port = 4984;
         private const string DbName = "couchbaseevents";
 
-        private int _count = 1;
+        private int _count = 0;
         private Database _db;
         private Replication _pull;
         private Replication _push;
         private Button _button;
-        private TextView _status;
         private TextView _numberGenerated;
+        private TableLayout _layout;
         private bool _shouldBeStopped = true;
+        private readonly object _insertLock = new object();
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -49,11 +51,13 @@ namespace HttpMemoryLeakCheck
 
                 _button.Click += OnClicked;
 
-                _status = FindViewById<TextView>(Resource.Id.textViewStatus);
-                _status.Text = "All set up";
+                lock (_insertLock)
+                {
+                    _layout = FindViewById<TableLayout>(Resource.Id.tableLayout1);
+                }
 
                 _numberGenerated = FindViewById<TextView>(Resource.Id.textViewDocGen);
-                _numberGenerated.Text = $"Blobs Generated:{_count}";
+                _numberGenerated.Text = $"Blobs Generated: {_count}";
             }
             catch (Exception exception)
             {
@@ -63,7 +67,6 @@ namespace HttpMemoryLeakCheck
 
         private void OnClicked(object sender, EventArgs eventArgs)
         {
-            
             _shouldBeStopped = !_shouldBeStopped;
             var state = _shouldBeStopped ? "Start" : "Stop";
 
@@ -102,6 +105,7 @@ namespace HttpMemoryLeakCheck
             var rev = doc.CreateRevision();
             rev.SetAttachment(Guid.NewGuid().ToString(), "application/octet-stream", data);
             rev.Save(false);
+            ++_count;
             Log.Debug(Tag, $"attachment {_count} added to database on doc {doc.Id}");
         }
 
@@ -111,7 +115,7 @@ namespace HttpMemoryLeakCheck
             _db = Manager.SharedInstance.GetDatabase("test");
         }
 
-        private Uri CreateSyncUri()
+        private static Uri CreateSyncUri()
         {
             Uri syncUri = null;
             try
@@ -136,7 +140,7 @@ namespace HttpMemoryLeakCheck
             _pull.Continuous = true;
             //      _push.Continuous = true;
             _pull.Start();
-            _push.Start();
+           // _push.Start();
             _push.Changed += OnPushChanged;
         }
 
@@ -147,7 +151,6 @@ namespace HttpMemoryLeakCheck
                 case ReplicationState.Stopped:
                     if (!_shouldBeStopped)
                     {
-                        _count++;
                         var id = AddDoc();
                         AddAttachment(id);
                         _push.Start();
@@ -155,9 +158,42 @@ namespace HttpMemoryLeakCheck
                     break;
             }
 
-           var stateMsg = $"State: {replicationChangeEventArgs.ReplicationStateTransition.Destination} \nTime: {DateTime.Now}\n{_status.Text}";
-            RunOnUiThread(() => _status.Text = stateMsg);
+            RunOnUiThread(
+                () =>
+                    InsertInfo(replicationChangeEventArgs.ReplicationStateTransition.Destination.ToString(),
+                        DateTime.Now.ToString(CultureInfo.CurrentCulture)));
             RunOnUiThread(() => _numberGenerated.Text = $"Documents generated: {_count}");
+        }
+
+        private void InsertInfo(string status, string time)
+        {
+            var row = CreateTableRow(status, time);
+            if (row == null)
+                return;
+            lock (_insertLock)
+            {
+                _layout.AddView(row, 1);
+            }
+        }
+
+        private static TableRow CreateTableRow(string status, string time)
+        {
+            var tv = new TextView(Application.Context)
+            {
+                TextSize = 14,
+                Text = status
+            };
+
+            var tv2 = new TextView(Application.Context)
+            {
+                TextSize = 14,
+                Text = time
+            };
+
+            var tr = new TableRow(Application.Context);
+            tr.AddView(tv);
+            tr.AddView(tv2);
+            return tr;
         }
 
         /// <summary>
