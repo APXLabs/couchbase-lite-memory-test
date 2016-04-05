@@ -14,6 +14,9 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# Windows executables
+*.exe
+
 # Windows shortcuts
 *.lnk
 
@@ -45,3 +48,9 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.suo
+/.vs
+/packages
+/HttpMemoryLeakCheck/bin
+/HttpMemoryLeakCheck/obj
+/HttpMemoryLeakCheck/Resources/Resource.Designer.cs
