@@ -22,6 +22,8 @@ namespace HttpMemoryLeakCheck
         private const string DbName = "couchbaseevents";
         private const string User = "couchbase_user";
         private const string Password = "mobile";
+        // ReSharper disable once InconsistentNaming
+        private const long BlobSizeMB = 19;
 
         private int _count;
         private Database _db;
@@ -103,7 +105,7 @@ namespace HttpMemoryLeakCheck
         private void AddAttachment(string id)
         {
             var doc = _db.GetDocument(id);
-            var data = MakeData(19);
+            var data = MakeData(BlobSizeMB);
             var rev = doc.CreateRevision();
             rev.SetAttachment(Guid.NewGuid().ToString(), "application/octet-stream", data);
             rev.Save(false);
