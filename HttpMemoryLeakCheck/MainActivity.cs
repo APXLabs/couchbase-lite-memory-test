@@ -15,9 +15,9 @@ namespace HttpMemoryLeakCheck
     [Activity(Label = "HttpMemoryLeakCheck", MainLauncher = true, Icon = "@drawable/icon")]
     public class MainActivity : Activity
     {
-        private const string Tag = "ELC";
+        private const string Tag = "Test";
         private const string Scheme = "http";
-        private const string Host = "10.2.1.125";
+        private const string Host = "X.X.X.X";
         private const int Port = 4984;
         private const string DbName = "couchbaseevents";
         private const string User = "couchbase_user";
