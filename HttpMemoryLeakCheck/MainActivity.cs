@@ -17,6 +17,7 @@ namespace HttpMemoryLeakCheck
     {
         private const string Tag = "Test";
         private const string Scheme = "http";
+        //Replace with the ip address of a sync gateway
         private const string Host = "X.X.X.X";
         private const int Port = 4984;
         private const string DbName = "couchbaseevents";
@@ -24,6 +25,7 @@ namespace HttpMemoryLeakCheck
         private const string Password = "mobile";
         // ReSharper disable once InconsistentNaming
         private const long BlobSizeMB = 50;
+        private readonly byte[] _data = new byte[BlobSizeMB*1024*1024];
 
         private int _count;
         private Database _db;
@@ -42,7 +44,7 @@ namespace HttpMemoryLeakCheck
             {
                 Task.Factory.StartNew(() =>
                 {
-                    StartDb();
+                    _db = Manager.SharedInstance.GetDatabase("test");
                     StartReplications();
                 });
 
@@ -78,6 +80,8 @@ namespace HttpMemoryLeakCheck
 
             if (!_shouldBeStopped)
                 _push.Start();
+            else
+                _push.Stop();
         }
 
         private string AddDoc()
@@ -105,18 +109,11 @@ namespace HttpMemoryLeakCheck
         private void AddAttachment(string id)
         {
             var doc = _db.GetDocument(id);
-            var data = MakeData(BlobSizeMB);
             var rev = doc.CreateRevision();
-            rev.SetAttachment(Guid.NewGuid().ToString(), "application/octet-stream", data);
+            rev.SetAttachment(Guid.NewGuid().ToString(), "application/octet-stream", _data);
             rev.Save(false);
             ++_count;
             Log.Debug(Tag, $"attachment {_count} added to database on doc {doc.Id}");
-        }
-
-
-        private void StartDb()
-        {
-            _db = Manager.SharedInstance.GetDatabase("test");
         }
 
         private static Uri CreateSyncUri()
@@ -142,9 +139,9 @@ namespace HttpMemoryLeakCheck
             _pull.Authenticator = authenticator;
             _push.Authenticator = authenticator;
             _pull.Continuous = true;
-            _push.Continuous = false;
-            _pull.Start();
-           // _push.Start();
+            _push.Continuous = true;
+            //       _pull.Start();
+            //       _push.Start();
             _push.Changed += OnPushChanged;
         }
 
@@ -152,13 +149,9 @@ namespace HttpMemoryLeakCheck
         {
             switch (replicationChangeEventArgs.ReplicationStateTransition.Destination)
             {
-                case ReplicationState.Stopped:
-                    if (!_shouldBeStopped)
-                    {
-                        var id = AddDoc();
-                        AddAttachment(id);
-                        _push.Start();
-                    }
+                case ReplicationState.Idle:
+                    var id = AddDoc();
+                    AddAttachment(id);
                     break;
             }
 
@@ -198,17 +191,6 @@ namespace HttpMemoryLeakCheck
             tr.AddView(tv);
             tr.AddView(tv2);
             return tr;
-        }
-
-        /// <summary>
-        /// Creates a data blob
-        /// </summary>
-        /// <param name="dataSize">size in MB</param>
-        /// <returns></returns>
-        private static byte[] MakeData(long dataSize)
-        {
-            var data = new byte[dataSize*1024*1024];
-            return data;
         }
     }
 }
